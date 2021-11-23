@@ -11,8 +11,8 @@ class LimitSizeStream extends stream.Transform {
   _transform(chunk, encoding, callback) {
     this.currentDataLength += encoding === 'buffer' ?
       chunk.length : chunk.toString(encoding).length;
-    if (this.currentDataLength >= this.limit ) {
-      callback(new LimitExceededError(), chunk);
+    if (this.currentDataLength > this.limit ) {
+      callback(new LimitExceededError());
     } else callback(null, chunk);
   }
 }
