@@ -168,5 +168,53 @@ describe('testing-configuration-logging/unit-tests', () => {
       expect(errors[0]).to.have.property('field').and.to.be.equal('age');
       expect(errors[0]).to.have.property('error').and.to.be.equal( `too little, expect 0, got -5`);
     });
+
+    it('валидатор проверяет превышение длины строки', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 2,
+          max: 5,
+        },
+      });
+
+      const errors = validator.validate({name: 'a      '});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('name');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `too long, expect 5, got 7`);
+    });
+
+    it('валидатор проверяет, что если неверный тип, то дальше проверка не идет', () => {
+      const validator = new Validator({
+        age: {
+          type: 'number',
+          min: 2,
+          max: 5,
+        },
+      });
+
+      const errors = validator.validate({age: 'lala'});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `expect number, got string`);
+    });
+
+    it('валидатор проверяет, число не превышает указанную величину', () => {
+      const validator = new Validator({
+        age: {
+          type: 'number',
+          min: 2,
+          max: 5,
+        },
+      });
+
+      const errors = validator.validate({age: 7});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `too big, expect 5, got 7`);
+    });
   });
 });
