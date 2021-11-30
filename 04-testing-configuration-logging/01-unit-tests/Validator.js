@@ -27,11 +27,14 @@ module.exports = class Validator {
           }
           break;
         case 'number':
+          if (isNaN(value) && !(isNaN(rules.max) && isNaN(rules.min))) {
+            errors.push({field, error: `expect actual number instead of NaN`});
+          }
           if (value < rules.min) {
             errors.push({field, error: `too little, expect ${rules.min}, got ${value}`});
           }
           if (value > rules.max) {
-            errors.push({field, error: `too big, expect ${rules.min}, got ${value}`});
+            errors.push({field, error: `too big, expect ${rules.max}, got ${value}`}); // еще косяк
           }
           break;
       }

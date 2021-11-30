@@ -12,11 +12,210 @@ describe('testing-configuration-logging/unit-tests', () => {
         },
       });
 
-      const errors = validator.validate({ name: 'Lalala' });
+
+      const errors = validator.validate({name: 'Lalala'});
 
       expect(errors).to.have.length(1);
       expect(errors[0]).to.have.property('field').and.to.be.equal('name');
       expect(errors[0]).to.have.property('error').and.to.be.equal('too short, expect 10, got 6');
+    });
+
+    it('валидатор проверяет крайнее макcимальное значение строкового поля', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 10,
+          max: 20,
+        },
+      });
+
+      const errors = validator.validate({name: 'LalalalalaLalalalala'});
+
+      expect(errors).to.have.length(0);
+    });
+
+    it('валидатор проверяет корректность сравнения типов', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 10,
+          max: 20,
+        },
+      });
+
+      const errors = validator.validate({name: false});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('name');
+      expect(errors[0]).to.have.property('error').and.to.be.equal('expect string, got boolean');
+    });
+
+    it('валидатор проверяет корректность проверки NaN', () => { // вот тут косяк в исходном коде
+      const validator = new Validator({
+        age: {
+          type: 'number',
+          min: 0,
+          max: 100,
+        },
+      });
+
+      const errors = validator.validate({age: NaN});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal('expect actual number instead of NaN');
+    });
+
+    it('валидатор проверяет на null', () => {
+      const validator = new Validator({
+        age: {
+          type: 'number',
+          min: 0,
+          max: 100,
+        },
+      });
+
+      const errors = validator.validate({age: null});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal('expect number, got object');
+    });
+
+    it('валидатор проверяет на undefined', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 10,
+          max: 100,
+        },
+      });
+
+      const errors = validator.validate({name: undefined});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('name');
+      expect(errors[0]).to.have.property('error').and.to.be.equal('expect string, got undefined');
+    });
+
+    it('валидатор проверяет на пустую строку', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 0,
+          max: 100,
+        },
+      });
+
+      const errors = validator.validate({name: ''});
+
+      expect(errors).to.have.length(0);
+    });
+
+    it('валидатор проверяет на преобразование пустой строки', () => {
+      const validator = new Validator({
+        age: {
+          type: 'number',
+          min: 0,
+          max: 100,
+        },
+      });
+
+      const errors = validator.validate({age: '' + 10});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal('expect number, got string');
+    });
+
+    it('валидатор проверяет завершение проверки после первой ошибки', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 15,
+          max: 100,
+        },
+        age: {
+          type: 'number',
+          min: 0,
+          max: 100,
+        },
+      });
+
+      const errors = validator.validate({name: 'La', age: 5});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('name');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `too short, expect 15, got 2`);
+    });
+
+    it('валидатор проверяет завершение проверки после первой ошибки', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 2,
+          max: 100,
+        },
+        age: {
+          type: 'number',
+          min: 0,
+          max: 100,
+        },
+      });
+
+      const errors = validator.validate({name: 'La', age: -5});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `too little, expect 0, got -5`);
+    });
+
+    it('валидатор проверяет превышение длины строки', () => {
+      const validator = new Validator({
+        name: {
+          type: 'string',
+          min: 2,
+          max: 5,
+        },
+      });
+
+      const errors = validator.validate({name: 'a      '});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('name');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `too long, expect 5, got 7`);
+    });
+
+    it('валидатор проверяет, что если неверный тип, то дальше проверка не идет', () => {
+      const validator = new Validator({
+        age: {
+          type: 'number',
+          min: 2,
+          max: 5,
+        },
+      });
+
+      const errors = validator.validate({age: 'lala'});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `expect number, got string`);
+    });
+
+    it('валидатор проверяет, число не превышает указанную величину', () => {
+      const validator = new Validator({
+        age: {
+          type: 'number',
+          min: 2,
+          max: 5,
+        },
+      });
+
+      const errors = validator.validate({age: 7});
+
+      expect(errors).to.have.length(1);
+      expect(errors[0]).to.have.property('field').and.to.be.equal('age');
+      expect(errors[0]).to.have.property('error').and.to.be.equal( `too big, expect 5, got 7`);
     });
   });
 });
