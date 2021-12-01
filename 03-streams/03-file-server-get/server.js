@@ -43,7 +43,7 @@ server.on('request', (req, res) => {
   }
 });
 
-send500 = (res) => () => {
+const send500 = (res) => () => {
   res.statusCode = 500;
   res.end('Server error');
 };
